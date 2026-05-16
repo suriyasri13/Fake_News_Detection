@@ -83,7 +83,8 @@ st.markdown("""
     /* Sidebar Styling */
     [data-testid="stSidebar"] {
         background-color: rgba(2, 6, 23, 0.95);
-        border-right: 1px solid rgba(255, 255, 255, 0.05);
+        border-right: 2px solid #3b82f6;
+        box-shadow: 10px 0 30px rgba(59, 130, 246, 0.2);
     }
 
     /* Tab Styling */
