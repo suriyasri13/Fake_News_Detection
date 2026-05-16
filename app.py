@@ -17,32 +17,99 @@ import plotly.graph_objects as go
 from datetime import datetime
 
 # --- Page Config ---
-st.set_page_config(page_title="FactGuard AI Ultra", page_icon="🔮", layout="wide")
+st.set_page_config(page_title="Fake News Detection AI", page_icon="🛡️", layout="wide")
 
-# --- Design System ---
+# --- Elite Design System (Custom CSS) ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap');
-    :root { --primary: #3b82f6; --secondary: #8b5cf6; --danger: #ef4444; --success: #10b981; }
-    html, body, [class*="css"] { font-family: 'Outfit', sans-serif; color: #f8fafc; }
-    .stApp { background: radial-gradient(circle at top right, #1e1b4b, #020617); }
+    
+    html, body, [class*="css"] {
+        font-family: 'Outfit', sans-serif;
+        color: #f8fafc;
+    }
+
+    /* Background Gradient */
+    .stApp {
+        background: radial-gradient(circle at top right, #1e1b4b, #020617);
+    }
+
+    /* Hide Streamlit Branding */
+    header {visibility: hidden;}
+    footer {visibility: hidden;}
+    #MainMenu {visibility: hidden;}
+
+    /* Glassmorphism Containers */
     .glass-card {
-        background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 24px;
-        padding: 2.5rem; margin-bottom: 2rem;
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 24px;
+        padding: 30px;
+        margin-bottom: 20px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.4);
     }
+
+    /* Neon Gradient Text */
+    .title-text {
+        font-size: 3.5rem;
+        font-weight: 800;
+        background: linear-gradient(to right, #3b82f6, #8b5cf6, #ec4899);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 10px;
+        letter-spacing: -2px;
+    }
+
+    /* Custom Buttons */
     .stButton>button {
-        width: 100%; border-radius: 12px; height: 4em;
-        background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-        color: white; font-weight: 800; border: none; transition: all 0.4s ease;
+        width: 100%;
+        border-radius: 14px;
+        height: 3.5em;
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        color: white;
+        font-weight: 800;
+        border: none;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 1px;
     }
-    .stButton>button:hover { transform: translateY(-5px); box-shadow: 0 20px 30px -10px rgba(139, 92, 246, 0.6); }
+
+    .stButton>button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 20px rgba(59, 130, 246, 0.4);
+    }
+
+    /* Sidebar Styling */
+    [data-testid="stSidebar"] {
+        background-color: rgba(2, 6, 23, 0.95);
+        border-right: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    /* Tab Styling */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 20px;
+        background-color: transparent;
+    }
+
+    .stTabs [data-baseweb="tab"] {
+        height: 50px;
+        white-space: pre;
+        background-color: rgba(30, 41, 59, 0.3);
+        border-radius: 12px;
+        color: #94a3b8;
+        font-weight: 600;
+        padding: 10px 25px;
+    }
+
+    .stTabs [aria-selected="true"] {
+        background-color: #3b82f6 !important;
+        color: white !important;
+    }
     </style>
     """, unsafe_allow_html=True)
 
-if 'input_val' not in st.session_state: st.session_state.input_val = ""
-if 'last_result' not in st.session_state: st.session_state.last_result = None
-
+# --- NLTK & AI Setup ---
 @st.cache_resource
 def init_system():
     nltk.download('punkt'); nltk.download('punkt_tab'); nltk.download('stopwords')
@@ -56,83 +123,94 @@ def clean_text(text):
     return " ".join([w for w in tokens if w not in stop_words])
 
 @st.cache_resource
-def get_ai_model():
-    data = {
-        'text': [
-            "Federal Reserve interest rate hike.", "Climate study findings released.", "Medical breakthrough in vaccines.",
-            "Local elections results finalized.", "Space exploration goals for 2030.", "SHOCKING: Secret revealed now!",
-            "CLICK HERE to win a million!", "Aliens landed in your backyard.", "Immortal life hack secret juice."
-        ]*10, 'label': [0, 0, 0, 0, 0, 1, 1, 1, 1]*10
-    }
+def get_model():
+    data = {'text': ["Policy update from government.", "Scientific breakthrough in health.", "Sports results announced.", "Weather report for tomorrow.", "SHOCKING secret revealed!", "CLICK here to win!", "Aliens landed in London."], 'label': [0, 0, 0, 0, 1, 1, 1]}
     df = pd.DataFrame(data); df['cleaned'] = df['text'].apply(clean_text)
-    vec = TfidfVectorizer(max_features=5000, ngram_range=(1, 3))
+    vec = TfidfVectorizer(max_features=5000, ngram_range=(1, 2))
     X = vec.fit_transform(df['cleaned']); y = df['label']
-    model = RandomForestClassifier(n_estimators=100, random_state=42); model.fit(X, y)
+    model = RandomForestClassifier(n_estimators=100); model.fit(X, y)
     return model, vec
 
-def scrape_content(url):
+def scrape(url):
     try:
-        r = requests.get(url, timeout=5); soup = BeautifulSoup(r.content, 'html.parser')
-        for s in soup(["script", "style"]): s.extract()
-        return '\n'.join(p.strip() for p in soup.get_text().splitlines() if p.strip())[:5000]
-    except: return "Scraping failed."
+        r = requests.get(url, timeout=5); s = BeautifulSoup(r.content, 'html.parser')
+        for script in s(["script", "style"]): script.extract()
+        return '\n'.join(p.strip() for p in s.get_text().splitlines() if p.strip())[:5000]
+    except: return "Connection failed."
 
 def run_analysis(text):
     if text:
-        model, vec = get_ai_model(); blob = TextBlob(text); cleaned = clean_text(text)
-        features = vec.transform([cleaned]); probs = model.predict_proba(features)[0]; pred = model.predict(features)[0]
-        st.session_state.result = {'pred': pred, 'conf': probs[pred], 'pol': (blob.sentiment.polarity+1)/2, 'sub': blob.sentiment.subjectivity, 'text': text}
-        st.session_state.input_val = ""
+        model, vec = get_model(); b = TextBlob(text); c = clean_text(text)
+        f = vec.transform([c]); p = model.predict(f)[0]; prob = model.predict_proba(f)[0]
+        st.session_state.result = {'pred': p, 'conf': prob[p], 'pol': (b.sentiment.polarity+1)/2, 'sub': b.sentiment.subjectivity, 'text': text}
     else: st.warning("No input provided.")
 
-def draw_gauge(score, title, color):
-    fig = go.Figure(go.Indicator(mode = "gauge+number", value = score*100, title = {'text': title, 'font': {'size': 18, 'color': '#94a3b8'}}, number = {'font': {'color': color, 'size': 32}},
-        gauge = {'axis': {'range': [None, 100]}, 'bar': {'color': color}, 'bgcolor': "rgba(0,0,0,0)", 'borderwidth': 2, 'bordercolor': "#475569"}))
-    fig.update_layout(height=220, margin=dict(l=20, r=20, t=50, b=20), paper_bgcolor='rgba(0,0,0,0)', font={'color': "#f8fafc"})
-    return fig
-
-# --- Layout ---
+# --- Sidebar ---
 with st.sidebar:
-    st.image("https://img.icons8.com/fluency/144/shield.png", width=80)
-    st.title("FactGuard Ultra")
+    st.markdown('<div style="text-align:center"><img src="https://img.icons8.com/fluency/144/shield.png" width="80"></div>', unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align:center'>FactGuard Pro</h2>", unsafe_allow_html=True)
     st.markdown("---")
     if st.button("RESET PLATFORM"): st.session_state.clear(); st.rerun()
-    st.info("High Sensitivity Mode Enabled.")
+    st.markdown("---")
+    st.info("System calibrated for journalistic pattern analysis.")
 
-st.title("🛡️ Intelligence Dashboard")
-tabs = st.tabs(["🚀 Scan Center", "🔗 URL Link", "🧬 How it Works"])
+# --- Main UI ---
+st.markdown("<h1 class='title-text'>FAKE NEWS DETECTION</h1>", unsafe_allow_html=True)
+st.markdown("<p style='color:#94a3b8; font-size:1.2rem; margin-top:-20px; margin-bottom:30px;'>Advanced Misinformation Analysis Engine by Suriya Sri</p>", unsafe_allow_html=True)
 
-with tabs[0]:
+tab1, tab2, tab3 = st.tabs(["🚀 SCAN CENTER", "🔗 URL SCAN", "🧬 SYSTEM INTEL"])
+
+with tab1:
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-    text_in = st.text_area("Source Text", height=200, placeholder="Paste content...", value=st.session_state.input_val)
-    if st.button("INITIATE TEXT SCAN"): run_analysis(text_in)
+    t_in = st.text_area("Source Material", height=200, placeholder="Paste your article or headline here...")
+    if st.button("INITIATE DEEP SCAN"): run_analysis(t_in)
     st.markdown('</div>', unsafe_allow_html=True)
 
-with tabs[1]:
+with tab2:
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-    url_in = st.text_input("Source URL")
-    if st.button("INITIATE URL SCRAPE"):
-        with st.spinner("Scraping..."): run_analysis(scrape_content(url_in))
+    u_in = st.text_input("Source URL")
+    if st.button("FETCH & ANALYZE"):
+        with st.spinner("Connecting to source..."): run_analysis(scrape(u_in))
     st.markdown('</div>', unsafe_allow_html=True)
 
-with tabs[2]:
+with tab3:
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
     st.markdown("### 🧬 AI Architecture")
-    st.write("FactGuard AI utilizes a **Random Forest Ensemble** with a **TF-IDF Vectorizer** (ngram range 1-3).")
-    st.markdown("#### 🛠️ Processing Pipeline:")
-    st.code("1. Regex-based Noise Removal\n2. NLTK Tokenization\n3. Stopword Filtering\n4. Sentiment Polarity Mapping\n5. Ensemble Voting Classifier")
-    st.info("This system is designed to detect 'Sensationalist' linguistic patterns.")
+    st.write("Using a Random Forest Ensemble with TF-IDF Vectorization.")
+    st.markdown("#### Process:")
+    st.code("1. Clean -> 2. Tokenize -> 3. Vectorize -> 4. Classify")
     st.markdown('</div>', unsafe_allow_html=True)
 
+# --- Results ---
 if 'result' in st.session_state:
-    res = st.session_state.result
+    r = st.session_state.result
+    st.markdown("---")
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-    c1, c2, c3, c4 = st.columns(4)
-    with c1: st.plotly_chart(draw_gauge(res['conf'], "Confidence", "#ef4444" if res['pred']==1 else "#10b981"), use_container_width=True)
-    with c2: st.plotly_chart(draw_gauge(res['pol'], "Tone", "#8b5cf6"), use_container_width=True)
-    with c3: st.plotly_chart(draw_gauge(res['sub'], "Bias", "#f59e0b"), use_container_width=True)
-    with c4: st.write(f"### {'🚩 FAKE' if res['pred']==1 else '✅ REAL'}"); st.write(f"Words: {len(res['text'].split())}")
+    
+    res_color = "#10b981" if r['pred'] == 0 else "#ef4444"
+    res_label = "✅ LIKELY AUTHENTIC" if r['pred'] == 0 else "🚩 FAKE NEWS DETECTED"
+    
+    st.markdown(f"<h1 style='color:{res_color}; font-weight:900;'>{res_label}</h1>", unsafe_allow_html=True)
+    
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        fig = go.Figure(go.Indicator(mode="gauge+number", value=r['conf']*100, title={'text': "Confidence", 'font':{'color':'#94a3b8'}}, number={'font':{'color':res_color}},
+            gauge={'axis':{'range':[None,100]}, 'bar':{'color':res_color}, 'bgcolor':'rgba(0,0,0,0)'}))
+        fig.update_layout(height=250, paper_bgcolor='rgba(0,0,0,0)', font={'color':'white'})
+        st.plotly_chart(fig, use_container_width=True)
+    with c2:
+        fig = go.Figure(go.Indicator(mode="gauge+number", value=r['pol']*100, title={'text': "Tone", 'font':{'color':'#94a3b8'}}, number={'font':{'color':'#8b5cf6'}},
+            gauge={'axis':{'range':[None,100]}, 'bar':{'color':'#8b5cf6'}, 'bgcolor':'rgba(0,0,0,0)'}))
+        fig.update_layout(height=250, paper_bgcolor='rgba(0,0,0,0)', font={'color':'white'})
+        st.plotly_chart(fig, use_container_width=True)
+    with c3:
+        fig = go.Figure(go.Indicator(mode="gauge+number", value=r['sub']*100, title={'text': "Bias Index", 'font':{'color':'#94a3b8'}}, number={'font':{'color':'#f59e0b'}},
+            gauge={'axis':{'range':[None,100]}, 'bar':{'color':'#f59e0b'}, 'bgcolor':'rgba(0,0,0,0)'}))
+        fig.update_layout(height=250, paper_bgcolor='rgba(0,0,0,0)', font={'color':'white'})
+        st.plotly_chart(fig, use_container_width=True)
+    
+    st.markdown("---")
+    st.download_button("📥 DOWNLOAD REPORT", FPDF().output(dest='S').encode('latin-1'), "Report.pdf", "application/pdf")
     st.markdown('</div>', unsafe_allow_html=True)
 
-st.markdown("---")
-st.caption("FactGuard Ultra | Created by Suriya Sri")
+st.markdown("<p style='text-align:center; opacity:0.5; font-size:0.8rem; margin-top:50px;'>FAKE NEWS DETECTION | PRO ENGINE v3.5 | CREATED BY SURIYA SRI</p>", unsafe_allow_html=True)
