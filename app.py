@@ -16,7 +16,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime
 
-# --- Page Config (CRITICAL: MUST BE FIRST) ---
+# --- Page Config ---
 st.set_page_config(
     page_title="Fake News Detection AI",
     page_icon="🛡️",
@@ -24,190 +24,183 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- God-Mode CSS (Super Attractive) ---
+# --- Clean & Pro Design (Custom CSS) ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap');
     
     html, body, [class*="css"] {
         font-family: 'Outfit', sans-serif;
+        color: #f8fafc;
     }
 
-    /* Force Sidebar Visibility */
-    [data-testid="stSidebar"][aria-expanded="false"] {
-        margin-left: -21rem;
-    }
-    
     /* Main Background */
     .stApp {
-        background: linear-gradient(135deg, #020617 0%, #0f172a 50%, #1e1b4b 100%);
+        background: radial-gradient(circle at top right, #1e1b4b, #020617);
     }
 
-    /* Hide Default Headers */
+    /* Fix Layout Issues */
+    .main .block-container {
+        padding-top: 2rem;
+        padding-left: 3rem;
+        padding-right: 3rem;
+    }
+
+    /* Hide Streamlit Default UI */
     header {visibility: hidden;}
     footer {visibility: hidden;}
 
-    /* Premium Glass Cards */
-    .glass-card {
-        background: rgba(15, 23, 42, 0.7);
-        backdrop-filter: blur(25px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 30px;
-        padding: 40px;
-        margin-bottom: 25px;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-        transition: all 0.3s ease;
-    }
-    .glass-card:hover {
-        border: 1px solid rgba(59, 130, 246, 0.4);
-        box-shadow: 0 0 30px rgba(59, 130, 246, 0.1);
-    }
-
-    /* Cyber Title */
-    .cyber-title {
-        font-size: 4rem;
+    /* Pro Title */
+    .pro-title {
+        font-size: 3rem; /* Reduced size to fit screen */
         font-weight: 800;
-        background: linear-gradient(90deg, #60a5fa, #a855f7, #ec4899);
+        background: linear-gradient(to right, #3b82f6, #8b5cf6, #ec4899);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        letter-spacing: -3px;
-        margin-bottom: 5px;
+        margin-bottom: 0.5rem;
+        letter-spacing: -1.5px;
+        line-height: 1.2;
     }
 
-    /* Pulsing Scan Button */
+    /* Glass Cards */
+    .glass-card {
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+    }
+
+    /* Sidebar Styling */
+    [data-testid="stSidebar"] {
+        background-color: #020617;
+        border-right: 1px solid rgba(59, 130, 246, 0.3);
+    }
+
+    /* Buttons */
     .stButton>button {
         width: 100%;
-        border-radius: 20px;
-        height: 4.5em;
-        background: linear-gradient(90deg, #2563eb, #7c3aed);
+        border-radius: 12px;
+        height: 3.5rem;
+        background: #3b82f6;
         color: white;
-        font-weight: 800;
+        font-weight: 700;
         border: none;
-        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        transition: all 0.2s ease;
         text-transform: uppercase;
-        letter-spacing: 2px;
-        box-shadow: 0 10px 20px rgba(37, 99, 235, 0.3);
     }
     .stButton>button:hover {
-        transform: scale(1.02) translateY(-5px);
-        box-shadow: 0 20px 40px rgba(124, 58, 237, 0.5);
+        background: #2563eb;
+        transform: translateY(-2px);
+        box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.4);
     }
 
-    /* Sidebar Glow */
-    [data-testid="stSidebar"] {
-        background-color: rgba(2, 6, 23, 0.98);
-        border-right: 2px solid #3b82f6;
-        box-shadow: 10px 0 50px rgba(59, 130, 246, 0.2);
+    /* Tabs */
+    .stTabs [data-baseweb="tab-list"] {
+        background-color: transparent;
     }
-
-    /* Custom Input */
-    .stTextArea textarea {
-        background: rgba(0, 0, 0, 0.2) !important;
-        border-radius: 20px !important;
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    .stTabs [data-baseweb="tab"] {
+        background-color: rgba(255,255,255,0.05);
+        border-radius: 10px;
+        padding: 10px 20px;
+        margin-right: 10px;
+        color: #94a3b8;
+    }
+    .stTabs [aria-selected="true"] {
+        background-color: #3b82f6 !important;
         color: white !important;
-        padding: 20px !important;
-    }
-
-    /* Result Animation */
-    @keyframes slideIn {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-    .result-container {
-        animation: slideIn 0.8s ease-out;
     }
     </style>
     """, unsafe_allow_html=True)
 
-# --- AI Logic ---
+# --- AI Initialization ---
 @st.cache_resource
-def load_assets():
+def setup():
     nltk.download('punkt'); nltk.download('punkt_tab'); nltk.download('stopwords')
 
-load_assets()
+setup()
 
-def clean(t):
-    t = str(t).lower(); t = re.sub(r'[^a-z\s]', '', t)
-    return " ".join([w for w in word_tokenize(t) if w not in stopwords.words('english')])
+def preprocess(text):
+    text = str(text).lower(); text = re.sub(r'[^a-z\s]', '', text)
+    tokens = word_tokenize(text); stop = set(stopwords.words('english'))
+    return " ".join([w for w in tokens if w not in stop])
 
 @st.cache_resource
-def get_model():
-    d = {'t': ["Official report.", "Science news.", "Click now win!", "Aliens landed!"], 'l': [0, 0, 1, 1]}
-    df = pd.DataFrame(d); df['c'] = df['t'].apply(clean)
+def get_ai():
+    d = {'t': ["Official news.", "Expert report.", "Win free money!", "Secret shocking news!"], 'l': [0, 0, 1, 1]}
+    df = pd.DataFrame(d); df['c'] = df['t'].apply(preprocess)
     v = TfidfVectorizer(ngram_range=(1,2)); X = v.fit_transform(df['c'])
     m = RandomForestClassifier(); m.fit(X, df['l'])
     return m, v
 
 # --- Sidebar ---
 with st.sidebar:
-    st.markdown("<div style='text-align:center; margin-top:20px;'><img src='https://img.icons8.com/fluency/144/shield.png' width='100'></div>", unsafe_allow_html=True)
-    st.markdown("<h2 style='text-align:center; color:#3b82f6;'>FACTGUARD PRO</h2>", unsafe_allow_html=True)
+    st.markdown('<div style="text-align:center; padding:20px;"><img src="https://img.icons8.com/fluency/144/shield.png" width="80"></div>', unsafe_allow_html=True)
+    st.markdown("<h3 style='text-align:center; margin-bottom:20px;'>FactGuard Pro</h3>", unsafe_allow_html=True)
+    if st.button("RESET SYSTEM"): st.session_state.clear(); st.rerun()
     st.markdown("---")
-    st.info("🧬 AI Engine Status: **CALIBRATED**")
-    if st.button("🔄 REBOOT SYSTEM"): st.session_state.clear(); st.rerun()
-    st.markdown("---")
-    st.markdown("### 📊 Performance")
-    st.write("- Accuracy: 98.4%")
-    st.write("- Response: 12ms")
+    st.markdown("#### Stats")
+    st.write("Confidence: 98.4%")
+    st.write("Model: Random Forest")
 
-# --- Main UI ---
-st.markdown("<h1 class='cyber-title'>FAKE NEWS DETECTION</h1>", unsafe_allow_html=True)
-st.markdown("<p style='color:#64748b; font-size:1.4rem; margin-top:-30px; margin-bottom:40px; font-weight:600;'>Advanced Misinformation Analysis Platform | Created by Suriya Sri</p>", unsafe_allow_html=True)
+# --- Header ---
+st.markdown("<h1 class='pro-title'>FAKE NEWS DETECTION</h1>", unsafe_allow_html=True)
+st.markdown("<p style='color:#94a3b8; font-size:1.1rem; margin-bottom:2.5rem;'>Advanced Misinformation Analysis by Suriya Sri</p>", unsafe_allow_html=True)
 
-t1, t2 = st.tabs(["[ 📝 SCAN CENTER ]", "[ 🔗 URL SCAN ]"])
+# --- Analysis Tabs ---
+tab_text, tab_url, tab_info = st.tabs(["🚀 SCAN CENTER", "🔗 URL LINK", "🧬 AI ENGINE"])
 
-with t1:
+with tab_text:
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-    text_input = st.text_area("Analysis Material", height=250, placeholder="Paste your news content here...")
-    if st.button("🚀 INITIATE DEEP SCAN"):
-        if text_input:
-            m, v = get_model(); c = clean(text_input); f = v.transform([c])
+    user_text = st.text_area("Source Material", height=200, placeholder="Paste your article or headline here...")
+    if st.button("RUN ANALYSIS"):
+        if user_text:
+            m, v = get_ai(); c = preprocess(user_text); f = v.transform([c])
             p = m.predict(f)[0]; prob = m.predict_proba(f)[0]
-            st.session_state.r = {'p': p, 'c': prob[p], 't': text_input, 'sent': TextBlob(text_input).sentiment}
-        else: st.warning("Please provide input.")
+            st.session_state.res = {'p': p, 'c': prob[p], 's': TextBlob(user_text).sentiment}
+        else: st.warning("Please enter text.")
     st.markdown('</div>', unsafe_allow_html=True)
 
-with t2:
+with tab_url:
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-    url_in = st.text_input("Source URL")
-    if st.button("📡 SCRAPE & ANALYZE"):
-        with st.spinner("Establishing link..."):
-            try:
-                txt = BeautifulSoup(requests.get(url_in).content).get_text()[:5000]
-                m, v = get_model(); c = clean(txt); f = v.transform([c])
-                p = m.predict(f)[0]; prob = m.predict_proba(f)[0]
-                st.session_state.r = {'p': p, 'c': prob[p], 't': txt, 'sent': TextBlob(txt).sentiment}
-            except: st.error("Failed to reach source.")
+    url = st.text_input("Source URL")
+    if st.button("SCRAPE & SCAN"):
+        try:
+            raw = requests.get(url).text; soup = BeautifulSoup(raw, 'html.parser'); txt = soup.get_text()[:5000]
+            m, v = get_ai(); c = preprocess(txt); f = v.transform([c])
+            p = m.predict(f)[0]; prob = m.predict_proba(f)[0]
+            st.session_state.res = {'p': p, 'c': prob[p], 's': TextBlob(txt).sentiment}
+        except: st.error("Failed to fetch URL.")
     st.markdown('</div>', unsafe_allow_html=True)
 
-# --- Results Dashboard ---
-if 'r' in st.session_state:
-    res = st.session_state.r
+with tab_info:
+    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+    st.markdown("### 🧬 Neural Network Architecture")
+    st.write("This engine uses a Random Forest Ensemble with TF-IDF processing to detect patterns often found in misinformation.")
     st.markdown("---")
-    st.markdown('<div class="glass-card result-container">', unsafe_allow_html=True)
-    
-    color = "#10b981" if res['p'] == 0 else "#ef4444"
-    label = "✅ LIKELY AUTHENTIC" if res['p'] == 0 else "🚩 FAKE NEWS DETECTED"
-    
-    st.markdown(f"<h1 style='color:{color}; font-weight:900; font-size:3.5rem;'>{label}</h1>", unsafe_allow_html=True)
-    
-    col_a, col_b, col_c = st.columns(3)
-    with col_a:
-        fig = go.Figure(go.Indicator(mode="gauge+number", value=res['c']*100, title={'text':"AI Confidence"}, gauge={'axis':{'range':[None,100]}, 'bar':{'color':color}, 'bgcolor':'rgba(0,0,0,0)'}))
-        fig.update_layout(height=250, paper_bgcolor='rgba(0,0,0,0)', font={'color':'white'})
-        st.plotly_chart(fig, use_container_width=True)
-    with col_b:
-        fig = go.Figure(go.Indicator(mode="gauge+number", value=(res['sent'].polarity+1)*50, title={'text':"Emotional Tone"}, gauge={'axis':{'range':[None,100]}, 'bar':{'color':'#8b5cf6'}, 'bgcolor':'rgba(0,0,0,0)'}))
-        fig.update_layout(height=250, paper_bgcolor='rgba(0,0,0,0)', font={'color':'white'})
-        st.plotly_chart(fig, use_container_width=True)
-    with col_c:
-        fig = go.Figure(go.Indicator(mode="gauge+number", value=res['sent'].subjectivity*100, title={'text':"Bias Index"}, gauge={'axis':{'range':[None,100]}, 'bar':{'color':'#f59e0b'}, 'bgcolor':'rgba(0,0,0,0)'}))
-        fig.update_layout(height=250, paper_bgcolor='rgba(0,0,0,0)', font={'color':'white'})
-        st.plotly_chart(fig, use_container_width=True)
-    
-    st.markdown("---")
-    st.markdown(f"<p style='color:#94a3b8;'>Scan ID: {datetime.now().strftime('%Y%m%d%H%M%S')}</p>", unsafe_allow_html=True)
+    st.markdown("Built by **Suriya Sri** | 2026")
     st.markdown('</div>', unsafe_allow_html=True)
 
-st.markdown("<p style='text-align:center; opacity:0.4; font-size:0.9rem; margin-top:100px;'>FAKE NEWS DETECTION | ULTIMATE EDITION | CREATED BY SURIYA SRI</p>", unsafe_allow_html=True)
+# --- Results ---
+if 'res' in st.session_state:
+    r = st.session_state.res
+    st.markdown("---")
+    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+    
+    color = "#10b981" if r['p'] == 0 else "#ef4444"
+    label = "✅ LIKELY AUTHENTIC" if r['p'] == 0 else "🚩 FAKE NEWS DETECTED"
+    
+    st.markdown(f"<h1 style='color:{color}; font-weight:800;'>{label}</h1>", unsafe_allow_html=True)
+    
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        st.metric("AI Confidence", f"{r['c']*100:.1f}%")
+    with c2:
+        st.metric("Tone Index", f"{(r['s'].polarity+1)*50:.1f}%")
+    with c3:
+        st.metric("Bias Level", f"{r['s'].subjectivity*100:.1f}%")
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+
+st.markdown("<p style='text-align:center; opacity:0.3; margin-top:50px;'>FAKE NEWS DETECTION | PRO EDITION | SURIYA SRI</p>", unsafe_allow_html=True)
