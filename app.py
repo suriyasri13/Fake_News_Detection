@@ -17,7 +17,7 @@ import plotly.graph_objects as go
 from datetime import datetime
 
 # --- Page Config ---
-st.set_page_config(page_title="Fake News Detection AI", page_icon="🛡️", layout="wide")
+st.set_page_config(page_title="Fake News Detection AI", page_icon="🛡️", layout="wide", initial_sidebar_state="expanded")
 
 # --- Elite Design System (Custom CSS) ---
 st.markdown("""
