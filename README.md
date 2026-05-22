@@ -2,9 +2,6 @@
 
 ### 🚀 Created by Suriya Sri
 
-🔗 **Live Links:**
-* 🌐 **Marketing Hub (React Landing Page)**: [https://landing-gules-five-78.vercel.app](https://landing-gules-five-78.vercel.app)
-* 🧠 **Intelligence Dashboard (Streamlit Engine)**: [https://fakenewsdetection-gwfyv5wr37zc69v96sknty.streamlit.app](https://fakenewsdetection-gwfyv5wr37zc69v96sknty.streamlit.app)
 
 A high-performance, expert-grade misinformation detection platform featuring a dual-architecture design: a premium **React Landing Page** and an elite **Streamlit Intelligence Dashboard**.
 
