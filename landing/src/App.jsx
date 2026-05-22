@@ -1,7 +1,7 @@
 import React from 'react';
 
 function App() {
-  const ENGINE_URL = import.meta.env.VITE_ENGINE_URL || 'https://fakenewsdetection-npc46ydtn4p68tzbuuativ.streamlit.app';
+  const ENGINE_URL = import.meta.env.VITE_ENGINE_URL || 'https://fakenewsdetection-gwfyv5wr37zc69v96sknty.streamlit.app';
 
   const scrollTo = (id) => {
     const element = document.getElementById(id);

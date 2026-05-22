@@ -4,7 +4,7 @@
 
 🔗 **Live Links:**
 * 🌐 **Marketing Hub (React Landing Page)**: [https://landing-gules-five-78.vercel.app](https://landing-gules-five-78.vercel.app)
-* 🧠 **Intelligence Dashboard (Streamlit Engine)**: [https://fakenewsdetection-npc46ydtn4p68tzbuuativ.streamlit.app](https://fakenewsdetection-npc46ydtn4p68tzbuuativ.streamlit.app)
+* 🧠 **Intelligence Dashboard (Streamlit Engine)**: [https://fakenewsdetection-gwfyv5wr37zc69v96sknty.streamlit.app](https://fakenewsdetection-gwfyv5wr37zc69v96sknty.streamlit.app)
 
 A high-performance, expert-grade misinformation detection platform featuring a dual-architecture design: a premium **React Landing Page** and an elite **Streamlit Intelligence Dashboard**.
 
@@ -50,6 +50,6 @@ A high-performance, expert-grade misinformation detection platform featuring a d
 ## 🌍 Deployment
 The application is fully deployed and active on the cloud:
 * **Frontend**: Hosted on **Vercel** at [https://landing-gules-five-78.vercel.app](https://landing-gules-five-78.vercel.app)
-* **Backend & ML Engine**: Hosted on **Streamlit Cloud** at [https://fakenewsdetection-npc46ydtn4p68tzbuuativ.streamlit.app](https://fakenewsdetection-npc46ydtn4p68tzbuuativ.streamlit.app)
+* **Backend & ML Engine**: Hosted on **Streamlit Cloud** at [https://fakenewsdetection-gwfyv5wr37zc69v96sknty.streamlit.app](https://fakenewsdetection-gwfyv5wr37zc69v96sknty.streamlit.app)
 
 **Project maintained and engineered by Suriya Sri.** 🛡️✨
