@@ -1,7 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
+import Dashboard from './Dashboard';
 
 function App() {
-  const ENGINE_URL = import.meta.env.VITE_ENGINE_URL || 'https://fakenewsdetection-drmeula4c8el52fbquwfjb.streamlit.app/';
+  const [showEngine, setShowEngine] = useState(false);
+
+  if (showEngine) {
+    return <Dashboard onBack={() => setShowEngine(false)} />;
+  }
 
   const scrollTo = (id) => {
     const element = document.getElementById(id);
@@ -31,7 +36,7 @@ function App() {
             <button onClick={() => scrollTo('author')} className="hover:text-white transition-colors">ABOUT</button>
           </div>
           <button 
-            onClick={() => window.open(ENGINE_URL, '_blank')}
+            onClick={() => setShowEngine(true)}
             className="px-6 py-2 bg-blue-600 hover:bg-blue-500 rounded-full text-[10px] font-black tracking-widest transition-all hover:scale-105 shadow-lg shadow-blue-500/20"
           >
             LAUNCH ENGINE
@@ -54,7 +59,7 @@ function App() {
               Empowering the digital world with state-of-the-art NLP algorithms to identify misinformation and sensationalism in real-time.
             </p>
             <div className="flex gap-6">
-              <button onClick={() => window.open(ENGINE_URL, '_blank')} className="px-10 py-5 bg-white text-black font-black rounded-2xl hover:scale-105 transition-transform shadow-xl shadow-white/10">GET STARTED</button>
+              <button onClick={() => setShowEngine(true)} className="px-10 py-5 bg-white text-black font-black rounded-2xl hover:scale-105 transition-transform shadow-xl shadow-white/10">GET STARTED</button>
               <button onClick={() => scrollTo('features')} className="px-10 py-5 border border-white/10 hover:bg-white/5 font-black rounded-2xl transition-all">CORE FEATURES</button>
             </div>
           </div>
