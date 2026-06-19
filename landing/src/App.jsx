@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 
 function App() {
   const [showEngine, setShowEngine] = useState(false);
-  const ENGINE_URL = import.meta.env.VITE_ENGINE_URL || 'https://fakenewsdetection-gwfyv5wr37zc69v96sknty.streamlit.app';
+  const ENGINE_URL = (import.meta.env.VITE_ENGINE_URL || 'https://fakenewsdetection-gwfyv5wr37zc69v96sknty.streamlit.app') + '/?embed=true';
 
   if (showEngine) {
     return (
