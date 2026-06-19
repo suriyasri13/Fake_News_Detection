@@ -1,7 +1,0 @@
-pandas
-numpy
-nltk
-scikit-learn
-textblob
-beautifulsoup4
-requests

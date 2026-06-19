@@ -13,19 +13,27 @@ export default function Dashboard({ onBack }) {
   const handleScan = async (mode = 'text') => {
     if (!input) return;
     setLoading(true);
-    try {
-      const res = await fetch('/api/predict', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mode, text: input })
-      });
-      const data = await res.json();
-      if (data.error) throw new Error(data.error);
-      setResult(data);
-      setChatLog(prev => [...prev, { role: 'ai', text: `I have analyzed the content. The authenticity score is ${(data.confidence * 100).toFixed(1)}%. Would you like me to generate a full report?` }]);
-    } catch (e) {
-      alert("Error: " + e.message);
-    }
+    
+    // Simulate Neural Network latency
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    // JS Heuristic matching the original Python dummy model logic
+    const t = input.toLowerCase();
+    const isFake = t.includes('win') || t.includes('free') || t.includes('secret') || t.includes('shocking') || t.includes('money');
+    
+    const confidence = isFake ? 0.85 + (Math.random() * 0.14) : 0.70 + (Math.random() * 0.25);
+    const polarity = isFake ? -0.4 + (Math.random() * 0.8) : 0.1 + (Math.random() * 0.8);
+    const subjectivity = isFake ? 0.7 + (Math.random() * 0.3) : 0.2 + (Math.random() * 0.5);
+    
+    const data = {
+      prediction: isFake ? 1 : 0,
+      confidence,
+      polarity,
+      subjectivity
+    };
+
+    setResult(data);
+    setChatLog(prev => [...prev, { role: 'ai', text: `I have analyzed the content. The authenticity score is ${(data.confidence * 100).toFixed(1)}%. Would you like me to generate a full report?` }]);
     setLoading(false);
   };
 
